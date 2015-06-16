@@ -14,7 +14,8 @@ defmodule EctoTtl.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :ecto],
+     mod: {Ecto.Ttl, []}]
   end
 
   # Dependencies can be Hex packages:
@@ -27,6 +28,6 @@ defmodule EctoTtl.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [{:ecto, "~> 0.12.0-rc"}]
   end
 end
