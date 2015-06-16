@@ -8,7 +8,7 @@ defmodule Ecto.Ttl do
     Supervisor.start_link(tree, opts)
   end
 
-  def models(models) do
-    GenServer.call Ecto.Ttl.Worker, {:set_models, models}
+  def models(models, repo) do
+    GenServer.call Ecto.Ttl.Worker, {:set_models, Enum.map(models,  &{&1, repo})}
   end
 end
