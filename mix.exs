@@ -10,24 +10,17 @@ defmodule EctoTtl.Mixfile do
      deps: deps]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type `mix help compile.app` for more information
   def application do
     [applications: [:logger, :ecto],
      mod: {Ecto.Ttl, []}]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type `mix help deps` for more examples and options
   defp deps do
-    [{:ecto, "~> 0.12.0-rc"}]
+    [{:postgrex, ">= 0.0.0", optional: true},
+     {:mariaex, ">= 0.0.0", override: true},
+     {:ecto_it, "~> 0.1.0", optional: true},
+     {:ecto_migrate, "~> 0.4.0"},
+
+     {:ecto, "~> 0.12.0", override: true}]
   end
 end
