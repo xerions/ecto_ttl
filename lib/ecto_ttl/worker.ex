@@ -19,7 +19,7 @@ defmodule Ecto.Ttl.Worker do
     {:noreply, models, cleanup_interval}
   end
 
-  defp delete_expired({model, repo}), do: delete_expired({model, repo}, :lists.member(:ttl, model.__schema__(:fields)))
+  defp delete_expired({model, repo}), do: delete_expired({model, repo}, check_schema(model))
   defp delete_expired(_, :false), do: :ignore
   defp delete_expired({model, repo}, :true) do
     ignore_newest_seconds = Application.get_env(:ecto_ttl, :ignore_newest_seconds, @default_timeout)
@@ -38,8 +38,13 @@ defmodule Ecto.Ttl.Worker do
     current_time_seconds = :erlang.universaltime |> :calendar.datetime_to_gregorian_seconds
     expired_at_seconds = entry.ttl + (entry.updated_at |> Ecto.DateTime.to_erl |> :calendar.datetime_to_gregorian_seconds)
     cond do
-      current_time_seconds > expired_at_seconds -> repo.delete(entry)
+      current_time_seconds > expired_at_seconds -> repo.delete!(entry)
       :true -> :ignored
     end
+  end
+
+  defp check_schema(model) do
+    fields = model.__schema__(:fields)
+    :lists.member(:ttl, fields) and :lists.member(:updated_at, fields)
   end
 end

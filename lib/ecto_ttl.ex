@@ -17,14 +17,13 @@ defmodule Ecto.Ttl do
       ...>   use Ecto.Model
       ...>   schema "session" do
       ...>     field :name,    :string
+      ...>     field :updated_at, Ecto.DateTime
       ...>     field :ttl,     :integer, default: 3600
       ...>   end
       ...> end
       iex> Application.ensure_all_started(:ecto_ttl)
       {:ok, []}
       iex> Ecto.Ttl.models([Test.Session], Test.Repo)
-      :ok
-      iex> Test.Repo.insert!(struct(Test.Session, name: "testsession1", ttl: 1))
       :ok
   """
   use Application
