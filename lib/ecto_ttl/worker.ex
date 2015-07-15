@@ -28,8 +28,7 @@ defmodule Ecto.Ttl.Worker do
                      |> Ecto.DateTime.from_erl
     query = from m in model,
               where: m.ttl > 0 and m.updated_at < ^date_lastrun,
-              select: m
-              #TODO don't read the full record.. something like: %{updated_at: m.updated_at, name: m.name, ttl: m.ttl}
+              select: %{id: m.id, ttl: m.ttl, updated_at: m.updated_at}
     resp = repo.all(query)
     for e <- resp, do: check_delete_entry(model, repo, e)
   end
@@ -37,10 +36,7 @@ defmodule Ecto.Ttl.Worker do
   defp check_delete_entry(model, repo, entry) do
     current_time_seconds = :erlang.universaltime |> :calendar.datetime_to_gregorian_seconds
     expired_at_seconds = entry.ttl + (entry.updated_at |> Ecto.DateTime.to_erl |> :calendar.datetime_to_gregorian_seconds)
-    cond do
-      current_time_seconds > expired_at_seconds -> repo.delete!(entry)
-      :true -> :ignored
-    end
+    if current_time_seconds > expired_at_seconds, do: repo.delete!(struct(model, Map.to_list(entry)))
   end
 
   defp check_schema(model) do
