@@ -20,9 +20,8 @@ defmodule EctoTtlTest do
 
   test "time to live" do
     Ecto.Migration.Auto.migrate(Repo, MyModel)
-    {:ok, []} = Application.ensure_all_started(:ecto_ttl)
-    :ok = Ecto.Ttl.models([MyModel], Repo)
+    assert :ok = Ecto.Ttl.models([MyModel], Repo)
 
-    :ok = Repo.insert(%MyModel{name: "testsession1", ttl: 1})
+    assert %{} = Repo.insert!(%MyModel{name: "testsession1", ttl: 1})
   end
 end
