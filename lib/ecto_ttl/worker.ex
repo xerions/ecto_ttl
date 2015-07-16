@@ -1,5 +1,6 @@
 defmodule Ecto.Ttl.Worker do
   use GenServer
+  @batch_size 10
   @default_timeout 60
 
   import Ecto.Query
@@ -26,17 +27,29 @@ defmodule Ecto.Ttl.Worker do
     date_lastrun = :calendar.datetime_to_gregorian_seconds(:erlang.universaltime) - ignore_newest_seconds
                      |> :calendar.gregorian_seconds_to_datetime
                      |> Ecto.DateTime.from_erl
+    check_delete_batches(repo, model, date_lastrun)
+  end
+
+  defp check_delete_batches(repo, model, date_lastrun), do: check_delete_batches(repo, model, date_lastrun, 0)
+  defp check_delete_batches(repo, model, date_lastrun, offset) do
     query = from m in model,
-              where: m.ttl > 0 and m.updated_at < ^date_lastrun,
+              where: m.ttl > 0 and m.updated_at < ^date_lastrun and m.id > ^offset,
+              limit: ^@batch_size,
               select: %{id: m.id, ttl: m.ttl, updated_at: m.updated_at}
-    resp = repo.all(query)
-    for e <- resp, do: check_delete_entry(model, repo, e)
+              resp = repo.all(query)
+    batch_processed =
+      for e <- resp, do: check_delete_entry(model, repo, e)
+    cond do
+      length(batch_processed) < @batch_size -> :ok
+      true -> check_delete_batches(repo, model, date_lastrun, List.last(batch_processed))
+    end
   end
 
   defp check_delete_entry(model, repo, entry) do
     current_time_seconds = :erlang.universaltime |> :calendar.datetime_to_gregorian_seconds
     expired_at_seconds = entry.ttl + (entry.updated_at |> Ecto.DateTime.to_erl |> :calendar.datetime_to_gregorian_seconds)
     if current_time_seconds > expired_at_seconds, do: repo.delete!(struct(model, Map.to_list(entry)))
+    entry.id
   end
 
   defp check_schema(model) do

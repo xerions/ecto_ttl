@@ -24,10 +24,12 @@ defmodule EctoTtlTest do
     Application.put_env :ecto_ttl, :cleanup_interval, 1
     assert :ok = Ecto.Ttl.models([MyModel], Repo)
 
-    assert %{} = Repo.insert!(%MyModel{name: "testsession1", ttl: 1, updated_at: Ecto.DateTime.utc})
-    assert [%MyModel{}] = get_model
+    for i <- 1..20, do: assert %{} = Repo.insert!(%MyModel{name: "testname-#{i}", ttl: 1, updated_at: Ecto.DateTime.utc})
+    assert entries = [%MyModel{} | _] = get_model
+    assert 20 = length(entries)
+
     :timer.sleep(4000)
-    assert []           = get_model
+    assert []                         = get_model
   end
 
   def get_model, do: Repo.all (from m in MyModel)
