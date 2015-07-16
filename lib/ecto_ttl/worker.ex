@@ -35,12 +35,13 @@ defmodule Ecto.Ttl.Worker do
               where: m.ttl > 0 and m.updated_at < ^date_lastrun and m.id > ^offset,
               limit: ^batch_size,
               select: %{id: m.id, ttl: m.ttl, updated_at: m.updated_at}
-              resp = repo.all(query)
-    batch_processed =
-      for e <- resp, do: check_delete_entry(model, repo, e)
+    resp = repo.all(query)
+    {processed, last} = Enum.reduce(resp, {0, nil}, fn(entry, {count, _}) ->
+      {count + 1, check_delete_entry(model, repo, entry)}
+    end)
     cond do
-      length(batch_processed) < batch_size -> :ok
-      true -> check_delete_batches(repo, model, date_lastrun, List.last(batch_processed))
+      processed < batch_size -> :ok
+      true -> check_delete_batches(repo, model, date_lastrun, last)
     end
   end
 
