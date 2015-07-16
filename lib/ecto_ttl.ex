@@ -4,9 +4,9 @@ defmodule Ecto.Ttl do
 
   ## Description
 
-  After being started, Ecto.Ttl.Worker searches for expired entries in the database every :cleanup_interval seconds.
-  Only schemas with the :ttl field are considered for cleanup.
-  The :ttl fields value provides the timespan in seconds after which an entry is being deleted after its :updated_at timestamp.
+  After being started, `Ecto.Ttl.Worker` searches for expired entries in the database every `:cleanup_interval` seconds.
+  Only schemas with the `:ttl` field are considered for cleanup.
+  The :ttl fields value provides the timespan in seconds after which an entry is being deleted after its `:updated_at` timestamp.
 
   ### Usage
 
@@ -36,14 +36,22 @@ defmodule Ecto.Ttl do
   end
 
   @doc"""
-  Configure the set of models and their repository for Ecto.Ttl.Worker.
+  Configure the set of models and their repository for `Ecto.Ttl.Worker`.
 
   ## Parameters
-  * `models` - A list of modules which use Ecto.Model (models without the :ttl field may be included).
-  * `repo` - A repository (Ecto.Repo) which contains the models provided.
+  * `models` - A list of modules which use Ecto.Model (models without the `:ttl` field may be included).
+  * `repo` - A repository (`Ecto.Repo`) which contains the models provided.
 
   """
-  def models(models, repo) do
-    GenServer.call Ecto.Ttl.Worker, {:set_models, Enum.map(models,  &{&1, repo})}
-  end
+  def models(models, repo), do: GenServer.call(Ecto.Ttl.Worker, {:set_models, Enum.map(models,  &{&1, repo})})
+
+  @doc"""
+  Add models to the set of models which `Ecto.Ttl.Worker` considers for deletion.
+
+  ## Parameters
+  * `models` - A list of modules which use Ecto.Model (models without the `:ttl` field may be included).
+  * `repo` - A repository (`Ecto.Repo`) which contains the models provided.
+
+  """
+  def add_models(models, repo), do: GenServer.call(Ecto.Ttl.Worker, {:add_models, Enum.map(models,  &{&1, repo})})
 end

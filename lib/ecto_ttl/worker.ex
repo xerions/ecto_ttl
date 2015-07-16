@@ -11,10 +11,9 @@ defmodule Ecto.Ttl.Worker do
 
   def start_link, do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
 
-  def handle_call({:set_models, models}, _from, _state) do
-    {:reply, :ok, models, cleanup_interval}
-  end
-
+  def handle_call({:set_models, models}, _from, _state), do: {:reply, :ok, models, cleanup_interval}
+  def handle_call({:add_models, models}, _from, state), do: {:reply, :ok, Keyword.merge(state, models), cleanup_interval}
+  
   def handle_info(:timeout, models) do
     for model <- models, do: delete_expired(model)
     {:noreply, models, cleanup_interval}
