@@ -27,5 +27,5 @@ use Mix.Config
 
 config :ecto_ttl,
   ignore_newest_seconds: 0,
-  cleanup_interval: 60
-
+  cleanup_interval: 60,
+  batch_size: 1000

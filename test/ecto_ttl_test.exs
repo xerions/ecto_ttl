@@ -32,6 +32,7 @@ defmodule EctoTtlTest do
 
   test "time to live" do
     setup_ecto([MyModel])
+    Application.put_env :ecto_ttl, :batch_size, 10
     assert :ok = Ecto.Ttl.models([MyModel], Repo)
 
     for i <- 1..20, do: assert %{} = Repo.insert!(%MyModel{name: "testname-#{i}", ttl: 1, updated_at: Ecto.DateTime.utc})

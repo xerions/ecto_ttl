@@ -1,6 +1,6 @@
 defmodule Ecto.Ttl.Worker do
   use GenServer
-  @batch_size 10
+  @default_batch_size 1000
   @default_timeout 60
 
   import Ecto.Query
@@ -33,13 +33,13 @@ defmodule Ecto.Ttl.Worker do
   defp check_delete_batches(repo, model, date_lastrun, offset) do
     query = from m in model,
               where: m.ttl > 0 and m.updated_at < ^date_lastrun and m.id > ^offset,
-              limit: ^@batch_size,
+              limit: ^batch_size,
               select: %{id: m.id, ttl: m.ttl, updated_at: m.updated_at}
               resp = repo.all(query)
     batch_processed =
       for e <- resp, do: check_delete_entry(model, repo, e)
     cond do
-      length(batch_processed) < @batch_size -> :ok
+      length(batch_processed) < batch_size -> :ok
       true -> check_delete_batches(repo, model, date_lastrun, List.last(batch_processed))
     end
   end
@@ -66,4 +66,6 @@ defmodule Ecto.Ttl.Worker do
   defp handle_delete_callback(repo, model, entry, :ignore), do: nil
   defp handle_delete_callback(repo, model, entry, :delete), do: repo.delete!(struct(model, Map.to_list(entry)))
   defp handle_delete_callback(repo, model, entry, _), do: repo.delete!(struct(model, Map.to_list(entry)))
+
+  defp batch_size, do: Application.get_env(:ecto_ttl, :batch_size, @default_batch_size)
 end
