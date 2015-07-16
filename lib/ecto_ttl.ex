@@ -8,6 +8,10 @@ defmodule Ecto.Ttl do
   Only schemas with the `:ttl` field are considered for cleanup.
   The :ttl fields value provides the timespan in seconds after which an entry is being deleted after its `:updated_at` timestamp.
 
+  Optional the implemented Module may export a callback function
+  `:ttl_terminate` %{id: id, ttl: ttl, updated_at: updated_at} -> :ignore || :delete
+  to customize the workers behaviour.
+
   ### Usage
 
       iex> defmodule Test.Repo do
@@ -20,6 +24,7 @@ defmodule Ecto.Ttl do
       ...>     field :updated_at, Ecto.DateTime
       ...>     field :ttl,     :integer, default: 3600
       ...>   end
+      ...>   def ttl_terminate(%{}), do: :delete
       ...> end
       iex> Application.ensure_all_started(:ecto_ttl)
       {:ok, []}

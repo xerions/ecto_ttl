@@ -13,7 +13,7 @@ defmodule Ecto.Ttl.Worker do
 
   def handle_call({:set_models, models}, _from, _state), do: {:reply, :ok, models, cleanup_interval}
   def handle_call({:add_models, models}, _from, state), do: {:reply, :ok, Keyword.merge(state, models), cleanup_interval}
-  
+
   def handle_info(:timeout, models) do
     for model <- models, do: delete_expired(model)
     {:noreply, models, cleanup_interval}
@@ -47,7 +47,7 @@ defmodule Ecto.Ttl.Worker do
   defp check_delete_entry(model, repo, entry) do
     current_time_seconds = :erlang.universaltime |> :calendar.datetime_to_gregorian_seconds
     expired_at_seconds = entry.ttl + (entry.updated_at |> Ecto.DateTime.to_erl |> :calendar.datetime_to_gregorian_seconds)
-    if current_time_seconds > expired_at_seconds, do: repo.delete!(struct(model, Map.to_list(entry)))
+    if current_time_seconds > expired_at_seconds, do: callback_delete(repo, model, entry)
     entry.id
   end
 
@@ -55,4 +55,15 @@ defmodule Ecto.Ttl.Worker do
     fields = model.__schema__(:fields)
     :lists.member(:ttl, fields) and :lists.member(:updated_at, fields)
   end
+
+  defp callback_delete(repo, model, entry) do
+    cond do
+      function_exported?(model, :ttl_terminate, 1) -> handle_delete_callback(repo, model, entry, model.ttl_terminate(entry))
+      true -> repo.delete!(struct(model, Map.to_list(entry)))
+    end
+  end
+
+  defp handle_delete_callback(repo, model, entry, :ignore), do: nil
+  defp handle_delete_callback(repo, model, entry, :delete), do: repo.delete!(struct(model, Map.to_list(entry)))
+  defp handle_delete_callback(repo, model, entry, _), do: repo.delete!(struct(model, Map.to_list(entry)))
 end
