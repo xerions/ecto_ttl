@@ -1,4 +1,4 @@
-EctoTtl
+EctoTtl [![Build Status](https://travis-ci.org/xerions/ecto_ttl.svg)](https://travis-ci.org/xerions/ecto_ttl)
 =======
 
 EctoTtl provides a time to live extension for Ecto models.

@@ -54,7 +54,7 @@ defmodule Ecto.Ttl.Worker do
 
   defp check_schema(model) do
     fields = model.__schema__(:fields)
-    :lists.member(:ttl, fields) and :lists.member(:updated_at, fields)
+    (:ttl in fields) and (:updated_at in fields)
   end
 
   defp callback_delete(repo, model, entry) do

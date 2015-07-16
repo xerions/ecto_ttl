@@ -1,0 +1,13 @@
+language: elixir
+elixir:
+  - 1.0.5
+otp_release:
+  - 17.5
+services: mysql
+script:
+  - MIX_ENV=mysql mix test
+  - MIX_ENV=pg mix test
+sudo: false
+notifications:
+  recipients:
+    - elixmoon@gmail.com
