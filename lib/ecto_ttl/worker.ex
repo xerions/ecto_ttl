@@ -9,7 +9,9 @@ defmodule Ecto.Ttl.Worker do
     quote do: Application.get_env(:ecto_ttl, :cleanup_interval, @default_timeout) * 1000
   end
 
-  def start_link, do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  def start_link(models) when is_list(models), do: GenServer.start_link(__MODULE__, models, name: __MODULE__)
+
+  def init(modules), do: {:ok, modules, cleanup_interval}
 
   def handle_call({:set_models, models}, _from, _state), do: {:reply, :ok, models, cleanup_interval}
   def handle_call({:add_models, models}, _from, state), do: {:reply, :ok, Keyword.merge(state, models), cleanup_interval}

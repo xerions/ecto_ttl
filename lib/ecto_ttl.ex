@@ -35,7 +35,7 @@ defmodule Ecto.Ttl do
 
   def start(_type, _args) do
     import Supervisor.Spec
-    tree = [worker(Ecto.Ttl.Worker, [])]
+    tree = [worker(Ecto.Ttl.Worker, [[]])]
     opts = [name: Ecto.Ttl.Sup, strategy: :one_for_one]
     Supervisor.start_link(tree, opts)
   end
