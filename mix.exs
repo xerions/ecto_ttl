@@ -10,8 +10,7 @@ defmodule EctoTtl.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :ecto],
-     mod: {Ecto.Ttl, []}]
+    [applications: [:logger, :ecto]]
   end
 
   defp deps do

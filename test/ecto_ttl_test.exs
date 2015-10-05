@@ -26,6 +26,7 @@ defmodule EctoTtlTest do
 
   setup do
     {:ok, [:ecto_it]} = Application.ensure_all_started(:ecto_it)
+    spawn(fn -> Ecto.Ttl.Worker.start_link([]); :timer.sleep(:infinity) end)
     on_exit fn -> :application.stop(:ecto_it) end
   end
 
