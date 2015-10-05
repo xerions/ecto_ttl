@@ -24,7 +24,7 @@ defmodule Ecto.Ttl do
       ...>     field :updated_at, Ecto.DateTime
       ...>     field :ttl,     :integer, default: 3600
       ...>   end
-      ...>   def ttl_terminate(%{}), do: :delete
+      ...>   def ttl_terminate(_repo, %{}), do: :delete
       ...> end
       iex> Application.ensure_all_started(:ecto_ttl)
       {:ok, []}

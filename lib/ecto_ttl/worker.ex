@@ -61,8 +61,10 @@ defmodule Ecto.Ttl.Worker do
 
   defp callback_delete(repo, model, entry) do
     cond do
-      function_exported?(model, :ttl_terminate, 1) -> handle_delete_callback(repo, model, entry, model.ttl_terminate(entry))
-      true -> repo.delete!(struct(model, Map.to_list(entry)))
+      function_exported?(model, :ttl_terminate, 2) ->
+        handle_delete_callback(repo, model, entry, model.ttl_terminate(repo, entry))
+      true ->
+        repo.delete!(struct(model, Map.to_list(entry)))
     end
   end
 
