@@ -5,21 +5,18 @@ defmodule Ecto.Ttl.Worker do
 
   import Ecto.Query
 
-  defmacrop cleanup_interval do
-    quote do: Application.get_env(:ecto_ttl, :cleanup_interval, @default_timeout) * 1000
-  end
-
   def start_link(models) when is_list(models), do: GenServer.start_link(__MODULE__, models, name: __MODULE__)
 
-  def init(modules), do: {:ok, modules, cleanup_interval}
+  def init(modules), do: {:ok, modules, cleanup_interval()}
 
-  def handle_call({:set_models, models}, _from, _state), do: {:reply, :ok, models, cleanup_interval}
-  def handle_call({:add_models, models}, _from, state), do: {:reply, :ok, Keyword.merge(state, models), cleanup_interval}
+  def handle_call({:set_models, models}, _from, _state), do: {:reply, :ok, models, cleanup_interval()}
+  def handle_call({:add_models, models}, _from, state), do: {:reply, :ok, Keyword.merge(state, models), cleanup_interval()}
 
   def handle_info(:timeout, models) do
     for model <- models, do: delete_expired(model)
-    {:noreply, models, cleanup_interval}
+    {:noreply, models, cleanup_interval()}
   end
+
 
   defp delete_expired({model, repo}), do: delete_expired({model, repo}, check_schema(model))
   defp delete_expired(_, :false), do: :ignore
@@ -35,14 +32,14 @@ defmodule Ecto.Ttl.Worker do
   defp check_delete_batches(repo, model, date_lastrun, offset) do
     query = from m in model,
               where: m.ttl > 0 and m.updated_at < ^date_lastrun and m.id > ^offset,
-              limit: ^batch_size,
+              limit: ^batch_size(),
               select: %{id: m.id, ttl: m.ttl, updated_at: m.updated_at}
     resp = repo.all(query)
     {processed, last} = Enum.reduce(resp, {0, nil}, fn(entry, {count, _}) ->
       {count + 1, check_delete_entry(model, repo, entry)}
     end)
     cond do
-      processed < batch_size -> :ok
+      processed < batch_size() -> :ok
       true -> check_delete_batches(repo, model, date_lastrun, last)
     end
   end
@@ -68,9 +65,10 @@ defmodule Ecto.Ttl.Worker do
     end
   end
 
-  defp handle_delete_callback(repo, model, entry, :ignore), do: nil
+  defp handle_delete_callback(_repo, _model, _entry, :ignore), do: nil
   defp handle_delete_callback(repo, model, entry, :delete), do: repo.delete!(struct(model, Map.to_list(entry)))
   defp handle_delete_callback(repo, model, entry, _), do: repo.delete!(struct(model, Map.to_list(entry)))
 
+  defp cleanup_interval, do: Application.get_env(:ecto_ttl, :cleanup_interval, @default_timeout) * 1000
   defp batch_size, do: Application.get_env(:ecto_ttl, :batch_size, @default_batch_size)
 end
